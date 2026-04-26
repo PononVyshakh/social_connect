@@ -1,0 +1,514 @@
+
+copilot/deepseek/chatgpt/claude can use this document for REFERENCE when working
+with this project for helping the developer(me).
+we will follow this structure always and keep documantation . but dont alter this
+C:\Users\Admin\Desktop\social_connect\zUser_Guide\social_connect_project_guide.txt 
+file without my permission or unless i explicitly ask. you have no permission to
+make changes in this file . ack me each time .
+
+================================================================================
+        SOCIAL CONNECT — FLUTTER PROJECT STRUCTURE GUIDE
+        Feature-First Clean Architecture  |  Beginner Friendly
+================================================================================
+
+
+
+════════════════════════════════════════════════════════════════════════════════
+  1. THE BIG PICTURE
+════════════════════════════════════════════════════════════════════════════════
+
+Think of your app like a SCHOOL BUILDING. This is the easiest way to remember
+everything!
+
+  School Building   =   Your whole Flutter app
+  Departments       =   Features (auth, chat, home, profile)
+  Floors            =   Data / Domain / Presentation layers
+  Rooms             =   The actual .dart files
+  Main Office       =   core/ folder (shared tools for everyone)
+
+
+ROOT FOLDER LAYOUT
+------------------
+lib/
+├── main.dart          →  App starts here. The front door.
+├── assets/            →  Images, fonts, icons
+├── config/            →  Firebase & API settings
+├── core/              →  Shared tools — colors, routes, widgets
+└── features/          →  auth, chat, home, profile — each feature
+
+
+★  This structure is called "Feature-First Clean Architecture".
+   It is used by professional Flutter teams at real companies.
+   You are already using a production-grade setup!
+
+
+
+════════════════════════════════════════════════════════════════════════════════
+  2. core/ — THE MAIN OFFICE (Shared Across ALL Features)
+════════════════════════════════════════════════════════════════════════════════
+
+Everything inside core/ is shared across ALL features. If two features need
+the same thing, it lives here. Think of it as the school supply room.
+
+
+  core/constants/ — The Dictionary
+  ---------------------------------
+  app_colors.dart       Every single color in the app. Never type a raw
+                        color code outside this file.
+
+  app_dimensions.dart   All spacing, padding, border-radius values.
+                        Like a ruler that everyone shares.
+
+  app_strings.dart      All hard-coded text like "Welcome!" or "Error".
+                        Change text in one place = changes everywhere.
+
+  ► RULE: Whenever you want to use a color, FIRST check app_colors.dart.
+          If it's not there, ADD it there first, then use it.
+          Never type Color(0xFF...) directly in a widget.
+
+
+  core/errors/ — The First Aid Kit
+  ---------------------------------
+  exceptions.dart   Defines what CAN go wrong — NetworkException,
+                    TimeoutException, ServerException.
+
+  failures.dart     User-friendly error messages — "No internet",
+                    "Server busy". These are shown in the UI.
+
+
+  core/routes/ — The School Map
+  ------------------------------
+  app_router.dart    Tells Flutter HOW to move between screens.
+                     All navigation logic lives here.
+
+  route_names.dart   Short names for each screen — '/chat', '/profile'.
+                     Like room numbers on doors.
+
+  ► RULE: Every time you create a new screen, register its route name in
+          route_names.dart and define the navigation in app_router.dart FIRST.
+
+
+  core/theme/ — The Dress Code
+  -----------------------------
+  app_theme.dart    Sets light/dark mode, font family, button shapes
+                    for the whole app.
+
+  text_styles.dart  Pre-made text styles — bodyMedium, headingLarge.
+                    Use names, not raw TextStyle().
+
+  ► RULE: Never write TextStyle(fontSize: 16, fontWeight: FontWeight.bold)
+          inline in a widget. Define it here and use the name.
+
+
+  core/utils/ — The Toolkit
+  --------------------------
+  extensions.dart   Adds shortcuts to existing types.
+                    Example: "hello".capitalize() → "Hello"
+
+  formatters.dart   Formats phone numbers, dates, file sizes.
+                    e.g. 1000 → 1,000
+
+  validators.dart   Checks if a phone number or email is valid.
+                    Used in forms.
+
+
+  core/widgets/ — Shared LEGO Bricks
+  ------------------------------------
+  custom_button.dart        Your app's standard button — same style everywhere.
+  gradient_background.dart  A background wrapper used on multiple screens.
+  loading_overlay.dart      The full-screen spinner shown while loading.
+
+  ► RULE: A widget goes in core/widgets/ ONLY if it is used in 2 or more
+          different features. If only one feature uses it, keep it inside
+          that feature's own widgets/ folder.
+
+
+
+════════════════════════════════════════════════════════════════════════════════
+  3. features/ — THE DEPARTMENTS
+════════════════════════════════════════════════════════════════════════════════
+
+Every single feature follows the EXACT SAME 3-FLOOR STRUCTURE.
+Once you learn one feature, you know them all!
+
+  ┌─────────────────────────────────────────────────────────────┐
+  │  Floor 3 → presentation/   What the user SEES and TOUCHES   │
+  │                             Screens, widgets, controllers    │
+  ├─────────────────────────────────────────────────────────────┤
+  │  Floor 2 → domain/          The BRAIN. Pure data shapes     │
+  │                             (models). No Firebase. No UI.   │
+  ├─────────────────────────────────────────────────────────────┤
+  │  Floor 1 → data/            Talks to the OUTSIDE WORLD      │
+  │                             Firebase, APIs, local storage   │
+  └─────────────────────────────────────────────────────────────┘
+  Plus:        services/        Feature's own helper staff
+
+
+HOW DATA FLOWS — NEVER SKIP A FLOOR!
+--------------------------------------
+  Screen → Controller → Repository → Datasource → Firebase/API
+  (Answer travels back the same way in reverse)
+
+  A Screen NEVER talks to Firebase directly.
+  A Datasource NEVER updates UI directly.
+  This is the most important rule in clean architecture.
+
+
+FEATURE SUMMARY
+---------------
+  auth      Login, OTP, Registration           Has Firebase Auth layer
+  chat      Messaging between users             Has Firestore layer
+  home      Dashboard & app bar                 No data layer
+  profile   View & edit your profile            Has Firestore layer
+
+
+
+════════════════════════════════════════════════════════════════════════════════
+  4. features/auth/ — SECURITY DEPARTMENT
+════════════════════════════════════════════════════════════════════════════════
+
+This feature handles everything about WHO the user is — phone login,
+OTP verification, new user registration, and keeping the session alive.
+
+
+  data/ layer
+  -----------
+  auth_remote_datasource.dart
+      The ONLY file that calls Firebase Auth directly.
+      Sends OTP, verifies code, signs out.
+      Like the receptionist who picks up the phone to call external agencies.
+
+  auth_repository.dart
+      Middle manager. Takes results from datasource, catches errors,
+      converts them to Failures that the rest of the app understands.
+      Nobody else talks to datasource directly.
+
+
+  domain/ layer
+  -------------
+  user_model.dart
+      The blueprint of a User — id, name, phone, gender, profile photo URL,
+      createdAt. Just holds data. No Firebase. No logic.
+      Like an empty form template.
+
+
+  presentation/ layer
+  -------------------
+  auth_controller.dart    Brain of all auth screens. Holds isLoading,
+                          errorMessage state. Calls repository.
+
+  welcome_screen.dart     First screen the user sees — phone number entry
+                          + Sign In button.
+
+  otp_screen.dart         Enter the 6-digit SMS code. Shows countdown timer.
+
+  register_screen.dart    New users fill in their name and gender here.
+
+  auth_wrapper.dart       The gatekeeper. Checks if user is logged in.
+                          If yes → go to Home. If no → go to Welcome.
+
+
+  presentation/widgets/ — building blocks ONLY for auth screens
+  -------------------------------------------------------------
+  phone_input_field.dart  Styled phone text field with country code selector.
+  name_input_field.dart   Styled name text field used on the register screen.
+  gender_selector.dart    Male / Female toggle button.
+
+
+  services/ — auth helper staff
+  ------------------------------
+  auth_service.dart         Business logic: format phone number, validate OTP.
+  auth_cache_service.dart   Saves login state to SharedPreferences so app
+                            remembers you after restart.
+  session_manager.dart      Checks if session is still valid. Handles
+                            auto-logout on expiry.
+
+
+
+════════════════════════════════════════════════════════════════════════════════
+  5. features/chat/ — MESSAGING DEPARTMENT
+════════════════════════════════════════════════════════════════════════════════
+
+The heart of your social app. Real-time messaging powered by Firestore.
+Your chat_input_bar.dart lives here!
+
+
+  data/ layer
+  -----------
+  chat_remote_datasource.dart
+      Direct Firestore calls — send message, listen to messages stream,
+      mark as read.
+
+  chat_repository.dart
+      Middle manager for chat. Converts Firestore data into MessageModel
+      objects. Handles errors from datasource.
+
+
+  domain/ layer
+  -------------
+  message_model.dart
+      Blueprint of one message — id, senderId, receiverId, text, timestamp,
+      messageType (text/image/voice), isRead.
+
+
+  presentation/ layer
+  -------------------
+  chat_controller.dart      Brain of chat screens. Holds messages list,
+                            loading state. Starts Firestore listener.
+
+  users_list_screen.dart    Shows all users you can chat with.
+                            Each row shows name, last message, time.
+
+  chat_screen.dart          The actual conversation. Shows message bubbles.
+                            Contains the input bar at the bottom.
+
+
+  presentation/widgets/ — your custom chat widgets
+  -------------------------------------------------
+  chat_input_bar.dart       ★ YOUR FILE! The WhatsApp-style text input with
+                            emoji, attach, camera icons. Mic swaps to Send
+                            when typing.
+
+  chat_message_bubble.dart  A single message bubble — green on right (you),
+                            white on left (them). Shows timestamp and read tick.
+
+  chat_message_list.dart    The scrollable ListView of all bubbles.
+                            Auto-scrolls to bottom on new message.
+
+  chat_empty_state.dart     "No messages yet" illustration shown when
+                            conversation is empty.
+
+
+  services/
+  ---------
+  chat_service.dart   Manages real-time Firestore listener, message sending
+                      logic, marking messages as read, notification triggers.
+
+
+
+════════════════════════════════════════════════════════════════════════════════
+  6. features/home/ — THE DASHBOARD
+════════════════════════════════════════════════════════════════════════════════
+
+Simpler feature — NO data layer of its own because it just displays things
+that other features provide. Its main job is the app bar.
+
+
+  presentation/screens/
+  ---------------------
+  home_screen.dart    The main dashboard screen after login. Shows the feed
+                      or user list with the app bar on top.
+
+
+  presentation/widgets/appbar/ — micro-widgets that build the app bar
+  -------------------------------------------------------------------
+  Breaking the app bar into small separate files is very professional.
+  Each piece can be updated independently without touching the others.
+
+  common_app_bar.dart           Boss widget. Assembles all pieces below.
+  profile_icon_widget.dart      Your avatar photo in the top-left corner.
+  online_status_widget.dart     The green dot that shows you are online.
+  inbox_icon_widget.dart        The chat/message icon button.
+  notification_icon_widget.dart Bell icon with a red badge showing unread count.
+  menu_widget.dart              Hamburger or three-dot overflow menu.
+
+
+
+════════════════════════════════════════════════════════════════════════════════
+  7. features/profile/ — IDENTITY DEPARTMENT
+════════════════════════════════════════════════════════════════════════════════
+
+Handles viewing and editing everything about the logged-in user's profile.
+Each editable field gets its own separate screen — very clean and scalable.
+
+
+  presentation/screens/
+  ---------------------
+  profile_screen.dart       Shows your full profile — photo, name, about, gender.
+  edit_name_screen.dart     Screen dedicated to editing just the name.
+  edit_about_screen.dart    Screen for editing the bio / about text.
+  edit_gender_screen.dart   Screen for changing gender selection.
+
+
+  presentation/widgets/
+  ---------------------
+  profile_avatar_widget.dart    Big circular profile photo with edit icon overlay.
+  profile_name_tile.dart        Row: name label + value + edit arrow.
+  profile_about_tile.dart       Row: about/bio + edit arrow.
+  profile_gender_tile.dart      Row: gender + edit arrow.
+  profile_photo_editor.dart     Bottom sheet to pick/crop a new profile photo.
+
+
+  data/ and services/ layers
+  --------------------------
+  profile_remote_datasource.dart  Direct Firestore calls — get profile,
+                                  update name, upload photo URL.
+  profile_repository.dart         Middle manager. Returns ProfileModel to controller.
+  profile_model.dart              Blueprint: id, name, about, gender, photoUrl.
+  profile_controller.dart         Brain of profile screens. Holds profile state.
+  profile_service.dart            Helpers — image compression, Firebase Storage upload.
+
+
+
+════════════════════════════════════════════════════════════════════════════════
+  8. WHERE DOES MY NEW FILE GO? — DECISION GUIDE
+════════════════════════════════════════════════════════════════════════════════
+
+Use this flowchart EVERY SINGLE TIME you create a new file.
+Ask these questions in order and stop at the FIRST YES.
+
+  Q1. Is it used by 2 or more different features?
+      YES → core/widgets/  or  core/utils/
+
+  Q2. Is it a screen the user navigates to?
+      YES → features/[feature]/presentation/screens/
+
+  Q3. Is it a small UI piece that goes inside one screen?
+      YES → features/[feature]/presentation/widgets/
+
+  Q4. Does it manage state or call repositories?
+      YES → features/[feature]/presentation/controllers/
+
+  Q5. Does it talk to Firebase or an API directly?
+      YES → features/[feature]/data/datasources/
+
+  Q6. Is it a data shape (like UserModel, MessageModel)?
+      YES → features/[feature]/domain/models/
+
+  Q7. Is it a helper with business logic or local storage?
+      YES → features/[feature]/services/
+
+  Q8. Is it an image, font, or static file?
+      YES → assets/
+
+
+  ★ QUICK MEMORY TRICK:
+    Shared by many features → core/
+    Belongs to one feature  → features/[feature]/
+    Then ask: screen? widget? controller? datasource? model? service?
+
+
+
+════════════════════════════════════════════════════════════════════════════════
+  9. THE 5 GOLDEN RULES
+════════════════════════════════════════════════════════════════════════════════
+
+Memorise these. Break any one and your code becomes a tangled mess.
+
+  ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  RULE 1 — Features Never Import From Each Other
+  ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  The chat feature must NEVER import anything from auth directly.
+  Features communicate only through core/ or shared services.
+  This keeps each feature independent — remove one without breaking others.
+
+  BAD:  import '../../auth/domain/models/user_model.dart'  (inside chat/)
+  GOOD: import '../../../core/models/user_model.dart'  (shared in core)
+
+
+  ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  RULE 2 — Presentation Never Talks to Datasources
+  ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  A Screen must NEVER call Firebase directly.
+  Path: Screen → Controller → Repository → Datasource → Firebase
+  Never skip floors. This is the whole point of clean architecture.
+
+  BAD:  FirebaseFirestore.instance.collection('messages').get()  in a widget
+  GOOD: widget calls controller.loadMessages()  which calls repository
+
+
+  ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  RULE 3 — Models Are Dumb
+  ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  A model file should ONLY hold data fields.
+  No Firebase calls inside models. No UI code inside models.
+  They are just empty containers — like a blank form with field names.
+
+  BAD:  Future<void> save() { FirebaseFirestore.instance... }  inside UserModel
+  GOOD: UserModel only has  final String id, name, phone;  etc.
+
+
+  ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  RULE 4 — One File = One Job
+  ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  If a file is doing two different things, split it into two files.
+  chat_controller.dart handles chat state only — not profile, not auth.
+  When each file has ONE job, finding bugs becomes easy.
+
+  BAD:  auth_controller.dart also manages profile update logic
+  GOOD: auth_controller.dart for auth,  profile_controller.dart for profile
+
+
+  ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  RULE 5 — Always Add to Core Constants First
+  ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+  Before using any color, text style, spacing, or route name —
+  add it to the right core/ file first. Then use it by name.
+  Changing one value updates the whole app instantly.
+
+  BAD:  color: Color(0xFF00A884)  typed directly inside a widget
+  GOOD: color: AppColors.primary  (defined once in app_colors.dart)
+
+
+
+════════════════════════════════════════════════════════════════════════════════
+  10. QUICK REFERENCE CARD
+════════════════════════════════════════════════════════════════════════════════
+
+CREATING A NEW FEATURE? FOLLOW THIS CHECKLIST:
+-----------------------------------------------
+  [ ]  Create the feature folder:  features/myfeature/
+  [ ]  Add  data/datasources/myfeature_remote_datasource.dart
+  [ ]  Add  data/repositories/myfeature_repository.dart
+  [ ]  Add  domain/models/myfeature_model.dart
+  [ ]  Add  presentation/controllers/myfeature_controller.dart
+  [ ]  Add  presentation/screens/  (one file per screen)
+  [ ]  Add  presentation/widgets/  (small pieces for those screens)
+  [ ]  Add  services/myfeature_service.dart  (if needed)
+  [ ]  Register routes in  core/routes/route_names.dart  AND  app_router.dart
+  [ ]  Add any new colors to  core/constants/app_colors.dart  first
+
+
+AT-A-GLANCE: WHICH LAYER FOR WHICH JOB
+---------------------------------------
+  What you're building              File type              Folder
+  ─────────────────────────────────────────────────────────────────────────
+  New screen / page                 _screen.dart           presentation/screens/
+  Small reusable UI piece           _widget.dart           presentation/widgets/
+  State management / logic          _controller.dart       presentation/controllers/
+  Firebase / API call               _datasource.dart       data/datasources/
+  Error handling / conversion       _repository.dart       data/repositories/
+  Data shape / structure            _model.dart            domain/models/
+  Business logic / local storage    _service.dart          services/
+  Shared color / style / constant   add to existing file   core/constants/ or theme/
+  Shared utility / helper           add to existing file   core/utils/
+  Shared widget (2+ features)       _widget.dart           core/widgets/
+
+
+FILE NAMING CONVENTIONS
+-----------------------
+  Always use snake_case for file names.
+  Always suffix with what the file is:
+
+    chat_screen.dart          ← screen
+    chat_input_bar.dart       ← widget
+    chat_controller.dart      ← controller
+    chat_remote_datasource.dart  ← datasource
+    chat_repository.dart      ← repository
+    message_model.dart        ← model
+    chat_service.dart         ← service
+
+
+IMPORT ORDER IN EVERY FILE (best practice)
+-------------------------------------------
+  1. dart: imports       (dart:async, dart:convert)
+  2. package: imports    (flutter, firebase, get, etc.)
+  3. project imports     (your own files — relative paths)
+
+
+================================================================================
+  You have a production-grade project structure.
+  The world's best Flutter apps are built this way.
+  Keep this file handy. Follow the rules.
+  Your future self will thank you. 🚀
+================================================================================

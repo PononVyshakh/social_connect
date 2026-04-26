@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "259612726986",
+    "project_id": "social-connect-v1",
+    "storage_bucket": "social-connect-v1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:259612726986:android:89e7dcb9d83a6419b4c633",
+        "android_client_info": {
+          "package_name": "com.example.social_connect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCS8XSEQM73mL9I-2XtBs2_0gGxqeoFfz4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

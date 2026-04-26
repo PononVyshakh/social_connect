@@ -1,9 +1,34 @@
 import 'package:flutter/material.dart';
-import 'screens/register_screen.dart';
-import 'screens/login_screen.dart';
-import 'widgets/common_app_bar.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'config/firebase_options.dart';
+import 'core/routes/app_router.dart';
+import 'core/theme/app_theme.dart';
+import 'features/auth/presentation/controllers/auth_controller.dart';
+import 'features/chat/presentation/controllers/chat_controller.dart';
+import 'features/profile/presentation/controllers/profile_controller.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Hide system UI
+  await SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.manual,
+    overlays: [],
+  );
+  
+  // Set preferred orientations
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  
+  // Initialize Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  
   runApp(const SocialConnectApp());
 }
 
@@ -12,78 +37,29 @@ class SocialConnectApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Social Connect',
-      theme: ThemeData(
-        primaryColor: const Color(0xFF1B4332),
-        scaffoldBackgroundColor: const Color(0xFFF8F7F3),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF1B4332),
-          foregroundColor: Color(0xFFFAF9F6),
-          elevation: 0,
+    return MultiProvider(
+      providers: [
+        // Auth Controller
+        ChangeNotifierProvider(
+          create: (_) => AuthController(),
         ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF1B4332),
-            foregroundColor: const Color(0xFFD4A574),
-            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
+        // Chat Controller
+        ChangeNotifierProvider(
+          create: (_) => ChatController(),
         ),
-        textTheme: const TextTheme(
-          bodyMedium: TextStyle(color: Color(0xFF2C2C2C)),
-          headlineSmall: TextStyle(color: Color(0xFF2C2C2C)),
+        // Profile Controller
+        ChangeNotifierProvider(
+          create: (_) => ProfileController(),
         ),
-      ),
-      home: const UserTypeScreen(),
-    );
-  }
-}
-
-class UserTypeScreen extends StatelessWidget {
-  const UserTypeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const CommonAppBar(showBackButton: false),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'Select Your Gender',
-              style: TextStyle(fontSize: 24),
-            ),
-            const SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => RegisterScreen(gender: 'female'),
-                  ),
-                );
-              },
-              child: const Text('Female'),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => RegisterScreen(gender: 'male'),
-                  ),
-                );
-              },
-              child: const Text('Male'),
-            ),
-          ],
-        ),
+      ],
+      child: MaterialApp.router(
+        title: 'Social Connect',
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        routerConfig: AppRouter.router,
+        debugShowCheckedModeBanner: false,
       ),
     );
   }
 }
+
